@@ -31,19 +31,32 @@ API_KEY = os.getenv("AI_GRADER_API_KEY", "")
 BASE_URL = os.getenv("AI_GRADER_BASE_URL", "https://api.deepseek.com")
 MODEL_NAME = os.getenv("AI_GRADER_MODEL", "deepseek-v4-pro")
 
-# 初始化 OpenAI 客户端
-if not API_KEY:
-    raise RuntimeError(
-        "❌ 未设置 AI_GRADER_API_KEY 环境变量。\n"
-        "请在终端中运行：\n"
-        "  export AI_GRADER_API_KEY=\"sk-你的API密钥\"\n"
-        "或在项目根目录创建 .env 文件（参考 .env.example）"
-    )
+# 延迟初始化 OpenAI 客户端（允许 Streamlit 侧边栏动态设置 API Key）
+_client = None
 
-client = OpenAI(
-    api_key=API_KEY,
-    base_url=BASE_URL
-)
+
+def _get_client():
+    """获取或延迟创建 OpenAI 客户端。
+
+    Streamlit 场景：用户启动 app 时还没有 API Key，
+    在侧边栏填写后，_on_start_grading() 会设置环境变量并 reimport，
+    此时 _get_client() 才会首次创建 client。
+    """
+    global _client
+    if _client is not None:
+        return _client
+
+    api_key = os.getenv("AI_GRADER_API_KEY", "")
+    if not api_key:
+        raise RuntimeError(
+            "❌ 未设置 AI_GRADER_API_KEY 环境变量。\n"
+            "请在终端中运行：\n"
+            "  export AI_GRADER_API_KEY=\"sk-你的API密钥\"\n"
+            "或在项目根目录创建 .env 文件"
+        )
+    base_url = os.getenv("AI_GRADER_BASE_URL", "https://api.deepseek.com")
+    _client = OpenAI(api_key=api_key, base_url=base_url)
+    return _client
 
 
 def grade_single_question(question_id, candidate_answer, rubric, max_score, background="", reference_answer=""):
@@ -79,7 +92,7 @@ JSON 必须包含以下两个字段：
 
     try:
         # 3. 发送请求给大模型
-        response = client.chat.completions.create(
+        response = _get_client().chat.completions.create(
             model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": "你是一个严谨的AI自动阅卷系统。你只输出纯正的 JSON 格式结果。"},

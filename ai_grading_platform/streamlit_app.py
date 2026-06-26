@@ -52,13 +52,7 @@ for _d in _ENV_DIRS:
                     os.environ.setdefault(_key.strip(), _val.strip())
         break
 
-# ── 延迟导入 ai_grader（env 已就绪） ──
-def _init_grader():
-    """重新加载 ai_grader 模块，使其读取最新的 os.environ。"""
-    import ai_grader as ag
-    importlib.reload(ag)
-    return ag
-
+# ── 导入 ai_grader（延迟创建 client，无需预先配置 API Key） ──
 import ai_grader
 
 
