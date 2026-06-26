@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# 虚拟环境
+venv/
+.venv/
+env/
+.env
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude Code
+.claude/
+
+# 敏感数据 - 绝对不要提交
+*.xlsx
+*.xls
+*.html
+
+# 但保留示例/模板文件（白名单）
+!*.example.*
+!.env.example
+
+# 环境变量
+.env
