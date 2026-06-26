@@ -11,17 +11,15 @@
 
 ### PyCharm 打开即用（推荐，适合新手）
 
-1. **下载解压**：从 GitHub 下载 ZIP 压缩包，解压到本地
-2. **PyCharm 打开**：PyCharm → File → Open → 选择解压后的 `ai-grading-platform` 文件夹
-3. **创建虚拟环境**：PyCharm 右下角会提示 "No Python interpreter configured"，点击 → Add New Interpreter → 选择 Python 3.10+ → OK
-4. **安装依赖**：PyCharm 顶部会弹出黄色横幅 "Package requirements are not satisfied" → 点击 **Install requirements**（或打开 `requirements.txt`，左上角点蓝色 "Install" 链接）⏳ 等待 1-2 分钟
-5. **运行**：在左侧项目树中找到 `ai_grading_platform/streamlit_app.py` → 右键 → **Run 'streamlit_app'**
-6. PyCharm 底部的 **Run** 窗口会显示：
-   ```
-   Local URL: http://localhost:8501
-   ```
-   点击这个链接，浏览器自动打开
-7. **填写 API Key**：在页面左侧边栏填入你的 API Key、Base URL、Model，然后上传 Excel → 点「开始评分」
+> ⚠️ GitHub ZIP 下载解压后会多一层外壳文件夹，如 `ai-grading-platform-main/`，这是正常的。**PyCharm 打开这层外壳即可**，里面的 `.idea/` 是 PyCharm 自动生成的配置文件，不用管它（删了也不影响）。
+
+1. **下载解压**：从 GitHub 下载 ZIP，解压得到 `ai-grading-platform-main/`
+2. **PyCharm 打开**：PyCharm → File → Open → 选择 `ai-grading-platform-main` 文件夹
+3. **创建虚拟环境**：右下角提示 "No interpreter" → Add New Interpreter → Python 3.10+ → OK
+4. **安装依赖**：顶部黄色横幅 "Package requirements are not satisfied" → **Install requirements**（或打开 `ai_grading_platform/requirements.txt`，点蓝色 Install 链接）⏳ 等 1-2 分钟
+5. **运行**：左侧项目树打开 `ai_grading_platform/` → 右键 `streamlit_app.py` → **Run 'streamlit_app'**
+6. 底部 Run 窗口显示 `Local URL: http://localhost:8501`，点它打开浏览器
+7. **填写 API Key**：左侧边栏填入你的 API Key、Base URL、Model → 上传 Excel → 点「开始评分」
 
 > 如果 PyCharm 没弹出安装依赖的提示，可以在底部 Terminal 标签页手动输入：
 > ```bash
