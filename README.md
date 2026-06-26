@@ -9,17 +9,31 @@
 - Python 3.10+
 - 大模型 API Key（支持所有 OpenAI 兼容接口，如 DeepSeek、OpenAI、智谱等）
 
-### 安装运行
+### PyCharm 打开即用（推荐，适合新手）
+
+1. **下载解压**：从 GitHub 下载 ZIP 压缩包，解压到本地
+2. **PyCharm 打开**：PyCharm → File → Open → 选择解压后的 `ai-grading-platform` 文件夹
+3. **创建虚拟环境**：PyCharm 右下角会提示 "No Python interpreter configured"，点击 → Add New Interpreter → 选择 Python 3.10+ → OK
+4. **安装依赖**：PyCharm 顶部会弹出黄色横幅 "Package requirements are not satisfied" → 点击 **Install requirements**（或打开 `requirements.txt`，左上角点蓝色 "Install" 链接）⏳ 等待 1-2 分钟
+5. **运行**：在左侧项目树中找到 `ai_grading_platform/streamlit_app.py` → 右键 → **Run 'streamlit_app'**
+6. PyCharm 底部的 **Run** 窗口会显示：
+   ```
+   Local URL: http://localhost:8501
+   ```
+   点击这个链接，浏览器自动打开
+7. **填写 API Key**：在页面左侧边栏填入你的 API Key、Base URL、Model，然后上传 Excel → 点「开始评分」
+
+> 如果 PyCharm 没弹出安装依赖的提示，可以在底部 Terminal 标签页手动输入：
+> ```bash
+> pip install -r ai_grading_platform/requirements.txt
+> ```
+
+### 终端安装运行（老手）
 
 ```bash
-# 1. 克隆仓库
 git clone https://github.com/Fredfch29/ai-grading-platform.git
 cd ai-grading-platform/ai_grading_platform
-
-# 2. 安装依赖
 pip install -r requirements.txt
-
-# 3. 启动
 streamlit run streamlit_app.py
 ```
 
