@@ -143,6 +143,57 @@ ai_grading_platform/
 └── requirements.txt    # Python 依赖
 ```
 
+## 自定义与二次开发指南
+
+如果你要针对自己的题库改造这个项目，以下是各文件的职责和改造入口速查。
+
+### config.json 字段说明
+
+| 字段 | 作用 | 必填 | 可删/可加 |
+|------|------|------|-----------|
+| `q_num` | Excel 列名前缀匹配，如 `Q13` 匹配列 `Q13_连读标注` | ✅ 必填 | 删了系统找不到考生答案 |
+| `keyword` | 结果字典 Key（`{keyword}_得分`），Dashboard/导出/复核都靠它定位 | ✅ 必填 | 删了整个结果体系崩溃 |
+| `max_score` | 满分值，AI 评分上限校验 | ✅ 必填 | 删了分数校验失效 |
+| `rubric` | 发给 AI 的打分依据 | ✅ 必填 | 删了 AI 不知道按什么标准评分 |
+| `id` | 系统日志 + `COMPETENCY_LABEL_MAP` 能力维度分组 | 可选 | 删了该题归类到「其他能力」，不影响评分 |
+| `background` | 拼入 AI Prompt，用于阅读材料/长题干 | 可选 | 可删（留空字符串），可加 |
+| `reference_answer` | 拼入 AI Prompt，作为参考答案辅助判断 | 可选 | 可删（留空字符串），可加 |
+| *自定义字段* | 不与现有字段重名即可自由添加，代码自动忽略 | — | 加了不影响，要用需改代码 |
+
+### 各文件改造入口
+
+| 需求 | 改哪个文件 | 改哪里 |
+|------|-----------|--------|
+| 换题库（不改题型结构） | 不需要改代码 | 上传新的 `config.json` 即可 |
+| 调整 AI 评分逻辑 / Prompt | [ai_grader.py](ai_grading_platform/ai_grader.py) | `grade_single_question()` 函数中的 `prompt` 字符串（第 73-91 行） |
+| 调整能力维度分类 | [streamlit_app.py](ai_grading_platform/streamlit_app.py) | `COMPETENCY_LABEL_MAP` 字典（第 62 行），key 匹配 `config.json` 的 `id` 字段 |
+| 修改 Dashboard 图表/排名 | [streamlit_app.py](ai_grading_platform/streamlit_app.py) | `compute_question_stats()`、`build_ranking_df()`、`build_score_line_chart()`、`build_radar_chart()` |
+| 修改 Excel 导出列 | [streamlit_app.py](ai_grading_platform/streamlit_app.py) | `_generate_download_files()` 中的列顺序和列名 |
+| 修改 HTML 报告样式/结构 | [html_report.py](ai_grading_platform/html_report.py) | `generate_html_report()` |
+| 修改 Excel 列名匹配规则 | [streamlit_app.py](ai_grading_platform/streamlit_app.py) | `parse_candidates()` 中的列前缀匹配（第 129、131、144 行） |
+| 修改 Streamlit 页面 UI | [streamlit_app.py](ai_grading_platform/streamlit_app.py) | 各 `render_*` 函数 |
+| 新增 `config.json` 字段并让 AI 评分用到 | [ai_grader.py](ai_grading_platform/ai_grader.py) | 在 `grade_single_question()` 中读取 config 里的新字段，拼入 `prompt` |
+
+### 数据流转全景
+
+```
+Excel 上传
+  │
+  ├─► parse_candidates()         ── Q1_→姓名, Q4_→学校, Q13_~Q27_→作答
+  │
+  ├─► _grade_one_candidate()     ── 逐题调用 ai_grader.grade_single_question()
+  │      │
+  │      └─► ai_grader.py        ── 构建 Prompt → 调用大模型 → 返回 (分数, 理由)
+  │
+  ├─► grading_results[]          ── [{姓名, 学校, 总分, {keyword}_得分, {keyword}_评价, ...}]
+  │      │
+  │      ├─► Dashboard           ── 排名表 / 折线图 / 雷达图 / 能力维度
+  │      ├─► 人工复核             ── st.session_state.reviewed_scores → 覆盖分数
+  │      └─► 下载                 ── Excel (_generate_download_files) + HTML (html_report.py)
+  │
+  └─► config.json                ── 贯穿全程：标题/题目列表/满分/评分标准
+```
+
 ## 命令行使用（可选）
 
 如果不想用 Streamlit UI，也可以直接在终端批量评分：
