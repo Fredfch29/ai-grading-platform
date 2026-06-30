@@ -378,19 +378,34 @@ def render_sidebar():
 
         # ── Excel 列名映射 ──
         with st.expander("📋 Excel 列名映射", expanded=False):
+            st.caption(
+                "**学生信息列**（固定用途，与题目无关）：\n\n"
+                "这两列只用来读姓名和学校，不需要跟题目编号对齐。\n"
+                "如果你的问卷系统导出的姓名列叫 `A1_` 而不是 `Q1_`，在这里改前缀就行。"
+            )
             st.text_input(
                 "姓名列前缀",
                 value=st.session_state.name_col_prefix,
-                help="Excel 中姓名列的列名前缀，默认 Q1_",
+                help="用于识别姓名列的列名前缀。例如 Q1_ 可匹配 Q1_姓名、Q1_text 等",
                 key="name_col_prefix",
             )
             st.text_input(
                 "学校列前缀",
                 value=st.session_state.school_col_prefix,
-                help="Excel 中学校列的列名前缀，默认 Q4_",
+                help="用于识别学校列的列名前缀。例如 Q4_ 可匹配 Q4_学校、Q4_text 等",
                 key="school_col_prefix",
             )
-            st.caption("题目列自动识别 Q + 数字格式（如 Q13_xxx），无需配置")
+            st.divider()
+            st.caption(
+                "**题目列**（自动识别，无需配置）：\n\n"
+                "系统自动扫描 Excel 中所有 `Q + 数字` 格式的列作为题目答案，"
+                "然后与 `config.json` 中的 `q_num` 字段做匹配。\n\n"
+                "> ⚠️ **题目编号不要求从 Q13 开始**——只要 config.json 的 `q_num` 和 Excel 列名一致即可。\n\n"
+                "**示例**：\n"
+                "- config 配置了 `\"q_num\": \"Q5\"`、`\"q_num\": \"Q7\"`\n"
+                "- Excel 中有 `Q5_翻译`、`Q7_作文` 两列\n"
+                "- 系统自动匹配：Q5 ↔ Q5_翻译，Q7 ↔ Q7_作文 ✅"
+            )
 
         # ── 评分配置 ──
         with st.expander("📝 评分配置", expanded=True):
