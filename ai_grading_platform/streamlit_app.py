@@ -90,6 +90,8 @@ def init_session_state():
         "uploaded_file_name": "",
         "df": None,
         "parse_error": "",
+        "name_col_prefix": "Q1_",         # 姓名列前缀
+        "school_col_prefix": "Q4_",       # 学校列前缀
         # Grading
         "grading_status": "idle",     # "idle" | "running" | "paused" | "completed"
         "grading_results": [],
@@ -122,14 +124,16 @@ def parse_candidates(df):
     """
     candidates = []
 
-    # 找出姓名和学校列
+    # 找出姓名和学校列（前缀可从侧边栏配置）
     name_col = None
     school_col = None
+    name_prefix = st.session_state.get("name_col_prefix", "Q1_")
+    school_prefix = st.session_state.get("school_col_prefix", "Q4_")
     for col in df.columns:
         col_str = str(col)
-        if col_str.startswith('Q1_'):
+        if col_str.startswith(name_prefix):
             name_col = col
-        elif col_str.startswith('Q4_'):
+        elif col_str.startswith(school_prefix):
             school_col = col
 
     for idx, row in df.iterrows():
@@ -371,6 +375,22 @@ def render_sidebar():
                 help="模型名称",
                 key="sidebar_model",
             )
+
+        # ── Excel 列名映射 ──
+        with st.expander("📋 Excel 列名映射", expanded=False):
+            st.text_input(
+                "姓名列前缀",
+                value=st.session_state.name_col_prefix,
+                help="Excel 中姓名列的列名前缀，默认 Q1_",
+                key="name_col_prefix",
+            )
+            st.text_input(
+                "学校列前缀",
+                value=st.session_state.school_col_prefix,
+                help="Excel 中学校列的列名前缀，默认 Q4_",
+                key="school_col_prefix",
+            )
+            st.caption("题目列自动识别 Q + 数字格式（如 Q13_xxx），无需配置")
 
         # ── 评分配置 ──
         with st.expander("📝 评分配置", expanded=True):
