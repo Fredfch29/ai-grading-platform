@@ -82,9 +82,10 @@ def init_session_state():
         "sidebar_base_url": os.getenv("AI_GRADER_BASE_URL", "https://api.deepseek.com"),
         "sidebar_model": os.getenv("AI_GRADER_MODEL", "deepseek-v4-pro"),
         # Config
-        "sidebar_config_source": "builtin",  # "builtin" | "upload"
+        "sidebar_config_source": "builtin",  # "builtin" | "custom"
         "config": None,                      # loaded config dict
-        "config_json_str": "",               # uploaded JSON text
+        "config_json_str": "",               # pasted / uploaded JSON text
+        "config_json_textarea": "",          # textarea key
         "config_error": "",
         # Excel
         "uploaded_file_name": "",
@@ -411,32 +412,67 @@ def render_sidebar():
         with st.expander("📝 评分配置", expanded=True):
             st.radio(
                 "选择题目配置",
-                options=["builtin", "upload"],
-                format_func=lambda x: "📦 使用内置配置" if x == "builtin" else "📤 上传配置文件",
+                options=["builtin", "custom"],
+                format_func=lambda x: "📦 内置示例" if x == "builtin" else "✏️ 自定义配置",
                 horizontal=True,
                 key="sidebar_config_source",
             )
 
-            if st.session_state.sidebar_config_source == "upload":
-                uploaded_config = st.file_uploader(
-                    "上传 config.json",
-                    type=["json"],
-                    key="sidebar_config_uploader",
+            if st.session_state.sidebar_config_source == "custom":
+                st.caption("将 AI 生成的 JSON 粘贴到下方，点「加载配置」即可。")
+                st.text_area(
+                    "配置 JSON",
+                    value=st.session_state.config_json_str,
+                    height=250,
+                    placeholder='{\n  "questions": [\n    {\n      "q_num": "Q5",\n      "id": "翻译题",\n      "keyword": "中译英翻译",\n      "max_score": 10,\n      "background": "请将以下中文翻译成英文...",\n      "reference_answer": "",\n      "rubric": "满分10分，评分标准...",\n    }\n  ]\n}',
+                    key="config_json_textarea",
                 )
-                if uploaded_config is not None:
-                    try:
-                        config_text = uploaded_config.read().decode("utf-8")
-                        config = json.loads(config_text)
-                        st.session_state.config = config
-                        st.session_state.config_json_str = config_text
-                        st.session_state.config_error = ""
-                        st.success(f"✅ 已加载，共 {len(config.get('questions', []))} 道题")
-                    except Exception as e:
-                        st.session_state.config_error = f"解析失败: {e}"
-                        st.error(st.session_state.config_error)
-                else:
-                    if st.session_state.config is None and st.session_state.config_error:
-                        st.error(st.session_state.config_error)
+                col1, col2 = st.columns([1, 3])
+                with col1:
+                    load_clicked = st.button(
+                        "🔍 加载配置",
+                        use_container_width=True,
+                        key="config_load_btn",
+                    )
+                with col2:
+                    if load_clicked:
+                        raw = st.session_state.config_json_textarea.strip()
+                        if not raw:
+                            st.session_state.config_error = "请先粘贴 JSON 内容"
+                            st.error(st.session_state.config_error)
+                        else:
+                            try:
+                                config = json.loads(raw)
+                                if "questions" not in config:
+                                    st.session_state.config_error = "JSON 缺少 'questions' 字段"
+                                    st.error(st.session_state.config_error)
+                                else:
+                                    st.session_state.config = config
+                                    st.session_state.config_json_str = raw
+                                    st.session_state.config_error = ""
+                                    st.success(f"✅ 已加载，共 {len(config.get('questions', []))} 道题")
+                            except json.JSONDecodeError as e:
+                                st.session_state.config_error = f"JSON 解析失败: {e}"
+                                st.error(st.session_state.config_error)
+
+                with st.expander("📤 或上传 JSON 文件", expanded=False):
+                    uploaded_config = st.file_uploader(
+                        "选择 .json 文件",
+                        type=["json"],
+                        key="sidebar_config_uploader",
+                        label_visibility="collapsed",
+                    )
+                    if uploaded_config is not None:
+                        try:
+                            config_text = uploaded_config.read().decode("utf-8")
+                            config = json.loads(config_text)
+                            st.session_state.config = config
+                            st.session_state.config_json_str = config_text
+                            st.session_state.config_error = ""
+                            st.success(f"✅ 已加载，共 {len(config.get('questions', []))} 道题")
+                        except Exception as e:
+                            st.session_state.config_error = f"解析失败: {e}"
+                            st.error(st.session_state.config_error)
             else:
                 # builtin
                 try:
